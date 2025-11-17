@@ -291,4 +291,17 @@ body {
     body * { visibility: hidden; }
     .print-area, .print-area * { visibility: visible; }
     .print-area { position: absolute; left: 0; top: 0; }
+
+    
+}
+/* Link styling for the footer name */
+.portfolio-link {
+    color: #667eea;     /* Keeps your theme color */
+    text-decoration: none; /* Removes the default underline */
+    transition: all 0.3s ease;
+}
+
+.portfolio-link:hover {
+    color: #764ba2;     /* Slightly darker purple on hover */
+    text-decoration: underline; /* Adds underline when you hover over it */
 }
