@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management System - GEHU PBL</title>
+    
+    <!-- Link the external CSS file -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- QR CODE LIBRARY CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- ==================== FIREBASE MODULAR SDK IMPORTS (Setup in index.html) ==================== -->
+    <script type="module">
+        // --- NOTE: Replace these with your actual Firebase configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJVJw0euCmVIFhuWkNZni9ILoFmMyKURY",
+            authDomain: "event-management-19d93.firebaseapp.com",
+            projectId: "event-management-19d93",
+            storageBucket: "event-management-19d93.firebasestorage.app",
+            messagingSenderId: "259689777570",
+            appId: "1:259689777570:web:a2c50195e43f1f107f8afb",
+            measurementId: "G-H0RSTBFJPN"
+        };
+        
+        // Expose config globally so script.js can initialize Firebase
+        window.firebaseConfig = firebaseConfig;
+    </script>
+</head>
+<body>
+    
+    <!-- ==================== FAKE PAYMENT GATEWAY MODAL ==================== -->
+    <div id="paymentModal" class="payment-overlay hidden">
+        <div class="payment-box">
+            <h2>💰 Fake Payment Gateway</h2>
+            <p style="margin-bottom: 15px;">Total Amount Due: <strong id="paymentAmount">₹0</strong></p>
+            
+            <div class="form-group">
+                <label>Card Number</label>
+                <input type="text" placeholder="XXXX XXXX XXXX XXXX" maxlength="16" required>
+            </div>
+            <div class="form-group" style="display: flex; gap: 10px;">
+                <input type="text" placeholder="MM/YY" maxlength="5" required style="width: 50%;">
+                <input type="text" placeholder="CVV" maxlength="3" required style="width: 50%;">
+            </div>
+            
+            <button class="btn btn-success" onclick="processPayment()">Complete Booking</button>
+            <button class="btn btn-danger" onclick="closePaymentModal()" style="margin-top: 10px;">Cancel Transaction</button>
+        </div>
+    </div>
+    
+    <!-- ==================== LOGIN PAGE ==================== -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>🎉 Event Management System</h1>
+                <p>Sign in to continue (use Email/Password)</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginUsername" placeholder="Enter email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <button type="button" class="btn btn-secondary" onclick="showRegister()">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== REGISTER PAGE ==================== -->
+    <div id="registerPage" class="login-container hidden">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>📝 Register</h1>
+                <p>Create your account</p>
+            </div>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" placeholder="Enter full name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="Enter email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Choose password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+                <button type="button" class="btn btn-secondary" onclick="showLogin()">Back to Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN DASHBOARD ==================== -->
+    <div id="dashboard" class="hidden">
+        <div class="container">
+            <div class="navbar">
+                <div class="navbar-brand">🎉 Event Management System</div>
+                <div class="navbar-user">
+                    <div class="user-info">
+                        <div class="user-name" id="userName"></div>
+                        <div class="user-role">Organizer / Attendee</div>
+                    </div>
+                    <button class="btn btn-danger btn-small" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEvents">0</div>
+                    <div class="stat-label">Total Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTickets">0</div>
+                    <div class="stat-label">Tickets Booked</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalRevenue">₹0</div>
+                    <div class="stat-label">Total Revenue (₹)</div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('analytics')">📊 Analytics</button>
+                <button class="tab-btn" onclick="switchTab('events')">📋 Events</button>
+                <button class="tab-btn" onclick="switchTab('tickets')">🎫 Book Tickets</button>
+                <button class="tab-btn" onclick="switchTab('calendar')">📅 Calendar</button>
+                <button class="tab-btn" onclick="switchTab('idcards')">🆔 ID Cards</button>
+            </div>
+            
+            <!-- ==================== ANALYTICS/SUMMARY TAB ==================== -->
+            <div id="analyticsTab" class="tab-content active">
+                <div class="grid">
+                    <div class="card">
+                        <h2>Event Performance Summary</h2>
+                        <div id="analyticsSummary">
+                            <!-- Summary Data will be rendered here -->
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>Recent Activity</h2>
+                        <div id="recentActivity">
+                            <!-- Recent tickets/events will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== EVENTS TAB ==================== -->
+            <div id="eventsTab" class="tab-content">
+                <div class="grid">
+                    <div class="card">
+                        <h2>➕ Create Event</h2>
+                        <form id="eventForm">
+                            <div class="form-group">
+                                <label>Event Name</label>
+                                <input type="text" id="eventName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Event Date</label>
+                                <input type="date" id="eventDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Venue</label>
+                                <input type="text" id="eventVenue" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Total Seats</label>
+                                <input type="number" id="eventSeats" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Ticket Price (₹)</label>
+                                <input type="number" id="eventPrice" min="0" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Event</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h2>📋 All Events</h2>
+                        <div id="eventsList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TICKETS TAB ==================== -->
+            <div id="ticketsTab" class="tab-content">
+                <div class="grid">
+                    <div class="card">
+                        <h2>🎫 Book Ticket</h2>
+                        <form id="ticketForm">
+                            <div class="form-group">
+                                <label>Select Event</label>
+                                <select id="ticketEvent" required>
+                                    <option value="">Choose an event</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Attendee Name</label>
+                                <input type="text" id="attendeeName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="attendeeEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Number of Tickets</label>
+                                <input type="number" id="ticketQuantity" min="1" value="1" required>
+                            </div>
+                            <button type="button" class="btn btn-success" onclick="initiatePayment()">Initiate Booking (Pay Now)</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h2>🎟️ My Tickets (Booked)</h2>
+                        <div id="ticketsList"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ==================== CALENDAR TAB ==================== -->
+            <div id="calendarTab" class="tab-content">
+                <div class="card">
+                    <h2>📅 Event Calendar View</h2>
+                    <div id="calendarView">
+                        <p>Listing events by date:</p>
+                        <!-- Calendar view data rendered by renderCalendar() -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== ID CARDS TAB ==================== -->
+            <div id="idcardsTab" class="tab-content">
+                <div class="grid">
+                    <div class="card">
+                        <h2>🆔 Issue ID Card</h2>
+                        <form id="idCardForm">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="idName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select id="idRole" required>
+                                    <option value="Attendee">Attendee</option>
+                                    <option value="Organizer">Organizer</option>
+                                    <option value="Volunteer">Volunteer</option>
+                                    <option value="VIP">VIP</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Event Access</label>
+                                <select id="idEventAccess" required>
+                                    <option value="">Select Event</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Number</label>
+                                <input type="tel" id="idContact" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">Issue ID Card</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h2>🎴 Issued ID Cards</h2>
+                        <div id="idCardsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== FOOTER ==================== -->
+    <div class="footer">
+        Created by <strong>Arpit Chaurasiya</strong> | Graphic Era Hill University | PBL - Data Structures and Algorithms
+    </div>
+
+    <!-- Link the external JavaScript file as a module -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
