@@ -5,13 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Management System - GEHU PBL</title>
     
-    <!-- Link the external CSS file -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- QR CODE LIBRARY CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
-    <!-- ==================== FIREBASE MODULAR SDK IMPORTS (Setup in index.html) ==================== -->
     <script type="module">
         // --- NOTE: Replace these with your actual Firebase configuration ---
         const firebaseConfig = {
@@ -30,7 +27,12 @@
 </head>
 <body>
     
-    <!-- ==================== FAKE PAYMENT GATEWAY MODAL ==================== -->
+    <div class="video-background">
+        <video autoplay loop muted playsinline class="background-clip">
+            <source src="https://raw.githubusercontent.com/arpitch25/eventmanagementsystem/main/bk.mov" type="video/mp4">
+        </video>
+    </div>
+    <div class="video-overlay"></div>
     <div id="paymentModal" class="payment-overlay hidden">
         <div class="payment-box">
             <h2>💰 Fake Payment Gateway</h2>
@@ -50,7 +52,6 @@
         </div>
     </div>
     
-    <!-- ==================== LOGIN PAGE ==================== -->
     <div id="loginPage" class="login-container">
         <div class="login-box">
             <div class="login-header">
@@ -72,7 +73,6 @@
         </div>
     </div>
 
-    <!-- ==================== REGISTER PAGE ==================== -->
     <div id="registerPage" class="login-container hidden">
         <div class="login-box">
             <div class="login-header">
@@ -98,7 +98,6 @@
         </div>
     </div>
 
-    <!-- ==================== MAIN DASHBOARD ==================== -->
     <div id="dashboard" class="hidden">
         <div class="container">
             <div class="navbar">
@@ -135,25 +134,21 @@
                 <button class="tab-btn" onclick="switchTab('idcards')">🆔 ID Cards</button>
             </div>
             
-            <!-- ==================== ANALYTICS/SUMMARY TAB ==================== -->
             <div id="analyticsTab" class="tab-content active">
                 <div class="grid">
                     <div class="card">
                         <h2>Event Performance Summary</h2>
                         <div id="analyticsSummary">
-                            <!-- Summary Data will be rendered here -->
-                        </div>
+                            </div>
                     </div>
                     <div class="card">
                         <h2>Recent Activity</h2>
                         <div id="recentActivity">
-                            <!-- Recent tickets/events will be rendered here -->
-                        </div>
+                            </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ==================== EVENTS TAB ==================== -->
             <div id="eventsTab" class="tab-content">
                 <div class="grid">
                     <div class="card">
@@ -190,7 +185,6 @@
                 </div>
             </div>
 
-            <!-- ==================== TICKETS TAB ==================== -->
             <div id="ticketsTab" class="tab-content">
                 <div class="grid">
                     <div class="card">
@@ -225,18 +219,15 @@
                 </div>
             </div>
             
-            <!-- ==================== CALENDAR TAB ==================== -->
             <div id="calendarTab" class="tab-content">
                 <div class="card">
                     <h2>📅 Event Calendar View</h2>
                     <div id="calendarView">
                         <p>Listing events by date:</p>
-                        <!-- Calendar view data rendered by renderCalendar() -->
-                    </div>
+                        </div>
                 </div>
             </div>
 
-            <!-- ==================== ID CARDS TAB ==================== -->
             <div id="idcardsTab" class="tab-content">
                 <div class="grid">
                     <div class="card">
@@ -278,12 +269,10 @@
         </div>
     </div>
     
-    <!-- ==================== FOOTER ==================== -->
     <div class="footer">
         Created by <strong>Arpit Chaurasiya</strong> | Graphic Era Hill University | PBL - Data Structures and Algorithms
     </div>
 
-    <!-- Link the external JavaScript file as a module -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
