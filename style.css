@@ -305,3 +305,32 @@ body {
     color: #764ba2;     /* Slightly darker purple on hover */
     text-decoration: underline; /* Adds underline when you hover over it */
 }
+/* ==================== LOGO STYLES ==================== */
+
+/* 1. Logo on the Login Screen (Top Left) */
+.login-logo {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    width: 80px;       /* Adjust size as needed */
+    height: auto;
+    z-index: 10;       /* Ensures it sits above the video/background */
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); /* Adds shadow so it pops */
+}
+
+/* 2. Logo on the Dashboard Navbar */
+.nav-logo {
+    height: 40px;      /* Fits inside the navbar */
+    width: auto;
+    vertical-align: middle; /* Aligns it with the text */
+    margin-right: 10px;     /* Space between logo and text */
+}
+
+/* Responsive adjustment for mobile phones */
+@media (max-width: 600px) {
+    .login-logo {
+        width: 60px;
+        top: 15px;
+        left: 15px;
+    }
+}
