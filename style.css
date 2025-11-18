@@ -238,7 +238,7 @@ body {
     overflow: hidden; 
 }
 
-/* ==================== FAKE PAYMENT POPUP ==================== */
+/* ==================== PAYMENT POPUP ==================== */
 .payment-overlay { 
     position: fixed; 
     top: 0; 
