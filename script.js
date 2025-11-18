@@ -58,21 +58,31 @@ function showLogin() {
     document.getElementById('loginPage').classList.remove('hidden');
     document.getElementById('registerPage').classList.add('hidden');
     document.getElementById('dashboard').classList.add('hidden');
+    // Show video background only on login/register pages
+    document.querySelector('.video-background').classList.remove('hidden');
 }
 
 function showRegister() {
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('registerPage').classList.remove('hidden');
+    // Show video background
+    document.querySelector('.video-background').classList.remove('hidden');
 }
 
 function showDashboard() {
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('registerPage').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
+    // Hide video background when on the dashboard
+    document.querySelector('.video-background').classList.add('hidden');
+    // Set a solid background for the dashboard
+    document.body.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
 }
 
 function logout() {
-    signOut(auth); 
+    signOut(auth);
+    // Reset body background when logging out
+    document.body.style.background = "#000";
 }
 
 function switchTab(tab) {
@@ -82,6 +92,7 @@ function switchTab(tab) {
     document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
     document.getElementById(tab + 'Tab').classList.add('active');
     
+    // Re-render complex views when switching to them
     if (tab === 'analytics') renderAnalytics();
     if (tab === 'calendar') renderCalendar();
 }
@@ -169,6 +180,9 @@ async function deleteEvent(id) {
     }
 }
 
+// ===============================================
+// UPDATED/FIXED FUNCTION
+// ===============================================
 async function cancelTicket(id, eventId, quantity) {
     if (!confirm(`Are you sure you want to cancel ${quantity} ticket(s)? This will refund the amount and release the seats.`)) return;
 
@@ -177,18 +191,22 @@ async function cancelTicket(id, eventId, quantity) {
             const ticketRef = doc(db, 'tickets', id);
             const eventRef = doc(db, 'events', eventId);
             
-            transaction.delete(ticketRef);
-
+            // 1. READ FIRST: Get the event document to check seats
             const eventDoc = await transaction.get(eventRef);
             if (!eventDoc.exists()) throw new Error("Event for ticket refund does not exist!");
             
+            // 2. WRITE (UPDATE): Calculate new seat count
             const newAvailableSeats = eventDoc.data().availableSeats + quantity;
             transaction.update(eventRef, { availableSeats: newAvailableSeats });
+            
+            // 3. WRITE (DELETE): Delete the ticket
+            transaction.delete(ticketRef);
         });
 
         alert('✅ Ticket successfully cancelled and seats released!');
     } catch (error) {
         console.error("Error cancelling ticket: ", error);
+        // Show the specific error message from the transaction
         alert(`❌ Failed to cancel ticket: ${error.message}`);
     }
 }
@@ -206,8 +224,13 @@ function initiatePayment() {
     const event = events.find(e => e.id === eventId);
     const quantity = parseInt(document.getElementById('ticketQuantity').value);
     
-    if (!event || event.availableSeats < quantity) {
-        alert(`Booking failed: Insufficient seats (${event ? event.availableSeats : 0} available) or event not selected.`);
+    if (!event) {
+        alert('Booking failed: Please select a valid event.');
+        return;
+    }
+    
+    if (event.availableSeats < quantity) {
+        alert(`Booking failed: Insufficient seats (${event.availableSeats} available).`);
         return;
     }
     
@@ -232,7 +255,7 @@ function closePaymentModal() {
 }
 
 async function processPayment() {
-    alert("💳 Processing payment... ");
+    alert("💳 Processing payment... (Fake 3 seconds delay)");
     await new Promise(resolve => setTimeout(resolve, 3000)); 
     
     if (!pendingTicketData) {
@@ -246,8 +269,9 @@ async function processPayment() {
     try {
         await runTransaction(db, async (transaction) => {
             const eventRef = doc(db, 'events', eventId);
-            const eventDoc = await transaction.get(eventRef);
             
+            // 1. READ FIRST
+            const eventDoc = await transaction.get(eventRef);
             if (!eventDoc.exists()) throw new Error("Event not found!");
             
             const currentSeats = eventDoc.data().availableSeats;
@@ -255,9 +279,11 @@ async function processPayment() {
                 throw new Error(`Insufficient seats. Only ${currentSeats} available.`);
             }
 
+            // 2. WRITE (UPDATE)
             const newAvailableSeats = currentSeats - quantity;
             transaction.update(eventRef, { availableSeats: newAvailableSeats });
 
+            // 3. WRITE (SET)
             const ticketData = {
                 eventId,
                 eventName: event.name,
@@ -288,14 +314,16 @@ async function processPayment() {
 // ==================== UI RENDERING FUNCTIONS ====================
 
 function updateAllUI() {
-    updateStats();
-    renderEvents();
-    renderTickets();
-    renderIdCards(); 
-    updateEventSelects();
-    // Re-render complex views if their tab is active
-    if (document.getElementById('analyticsTab')?.classList.contains('active')) renderAnalytics();
-    if (document.getElementById('calendarTab')?.classList.contains('active')) renderCalendar();
+    if (document.getElementById('totalEvents')) {
+        updateStats();
+        renderEvents();
+        renderTickets();
+        renderIdCards(); 
+        updateEventSelects();
+        
+        if (document.getElementById('analyticsTab')?.classList.contains('active')) renderAnalytics();
+        if (document.getElementById('calendarTab')?.classList.contains('active')) renderCalendar();
+    }
 }
 
 function updateStats() {
@@ -309,10 +337,12 @@ function updateStats() {
 function renderAnalytics() {
     const container = document.getElementById('analyticsSummary');
     const activityContainer = document.getElementById('recentActivity');
+    if (!container || !activityContainer) return;
+
     const totalRevenue = tickets.reduce((sum, t) => sum + t.totalPrice, 0);
     
-    const totalSeats = events.reduce((sum, e) => sum + e.seats, 0);
-    const seatsBooked = tickets.reduce((sum, t) => sum + t.quantity, 0);
+    const totalSeats = events.reduce((sum, e) => sum + (e.seats || 0), 0);
+    const seatsBooked = tickets.reduce((sum, t) => sum + (t.quantity || 0), 0);
     const bookingRate = totalSeats > 0 ? ((seatsBooked / totalSeats) * 100).toFixed(1) : 0;
     
     container.innerHTML = `
@@ -333,6 +363,8 @@ function renderAnalytics() {
 
 function renderCalendar() {
     const container = document.getElementById('calendarView');
+    if (!container) return;
+
     if (events.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>No upcoming events to display.</p></div>';
         return;
@@ -356,6 +388,8 @@ function renderCalendar() {
 
 function renderEvents() {
     const container = document.getElementById('eventsList');
+    if (!container) return;
+
     if (events.length === 0) {
         container.innerHTML = '<div class="empty-state">📭<p>No events yet</p></div>';
         return;
@@ -367,7 +401,7 @@ function renderEvents() {
             <p><strong>📅 Date:</strong> ${e.date}</p>
             <p><strong>📍 Venue:</strong> ${e.venue}</p>
             <p><strong>💺 Available Seats:</strong> ${e.availableSeats} / ${e.seats}</p>
-            <p><strong>💵 Price:</strong> ₹${e.price.toFixed(2)}</p>
+            <p><strong>💵 Price:</strong> ₹${e.price ? e.price.toFixed(2) : '0.00'}</p>
             <div class="event-actions">
                 <button class="btn btn-danger btn-small" onclick="deleteEvent('${e.id}')">Delete Event</button>
             </div>
@@ -377,6 +411,8 @@ function renderEvents() {
 
 function renderTickets() {
     const container = document.getElementById('ticketsList');
+    if (!container) return;
+
     if (tickets.length === 0) {
         container.innerHTML = '<div class="empty-state">🎫<p>No tickets booked</p></div>';
         return;
@@ -389,7 +425,7 @@ function renderTickets() {
                 <p style="font-size: 1.5em; font-weight: bold;">Ticket for ${t.eventName}</p>
                 <p><strong>Attendee:</strong> ${t.attendee}</p>
                 <p><strong>Quantity:</strong> ${t.quantity} ticket(s)</p>
-                <p><strong>Total Paid:</strong> ₹${t.totalPrice.toFixed(2)}</p>
+                <p><strong>Total Paid:</strong> ₹${t.totalPrice ? t.totalPrice.toFixed(2) : '0.00'}</p>
                 <p style="font-size: 0.9em; margin-top: 10px;">Booked: ${bookingTimeString}</p>
                 <div class="event-actions" style="margin-top: 10px; padding: 0;">
                     <button class="btn btn-danger btn-small" style="width: 150px; background: #f093fb;" onclick="cancelTicket('${t.id}', '${t.eventId}', ${t.quantity})">Cancel Ticket</button>
@@ -401,6 +437,8 @@ function renderTickets() {
 
 function renderIdCards() {
     const container = document.getElementById('idCardsList');
+    if (!container) return;
+
     if (idCards.length === 0) {
         container.innerHTML = '<div class="empty-state">🆔<p>No ID cards issued</p></div>';
         return;
@@ -433,9 +471,10 @@ function renderIdCards() {
     setTimeout(() => {
         idCards.forEach(card => {
             const qrElement = document.getElementById(`qrcode-${card.id}`);
-            if (qrElement) {
+            // Check if QRCode function exists (from CDN) and element is in DOM
+            if (qrElement && typeof QRCode !== 'undefined') {
                 const qrData = `ID:${card.id}|Role:${card.role}|EventID:${card.eventAccessId}`; 
-                // QRCode is defined globally via the CDN in index.html
+                
                 new QRCode(qrElement, {
                     text: qrData,
                     width: 100,
@@ -446,15 +485,16 @@ function renderIdCards() {
                 });
             }
         });
-    }, 50); 
+    }, 50); // Small delay to ensure DOM is updated
 }
 
 function updateEventSelects() {
     const ticketSelect = document.getElementById('ticketEvent');
     const idSelect = document.getElementById('idEventAccess');
-    
+    if (!ticketSelect || !idSelect) return;
+
     ticketSelect.innerHTML = '<option value="">Choose an event</option>' + 
-        events.map(e => `<option value="${e.id}">${e.name} - ${e.date} (₹${e.price.toFixed(2)})</option>`).join('');
+        events.map(e => `<option value="${e.id}">${e.name} - ${e.date} (₹${e.price ? e.price.toFixed(2) : '0.00'})</option>`).join('');
     
     idSelect.innerHTML = '<option value="">Select Event</option>' + 
         events.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
@@ -465,8 +505,8 @@ function printIdCard(id) {
 }
 
 // ==================== STARTUP ATTACHMENTS ====================
+// This ensures HTML onclick="" attributes can find the modular functions
 document.addEventListener('DOMContentLoaded', () => {
-     // Expose functions globally so the HTML onclick attributes can access them
      window.showRegister = showRegister;
      window.showLogin = showLogin;
      window.logout = logout;
