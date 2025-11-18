@@ -181,7 +181,7 @@ async function deleteEvent(id) {
 }
 
 // ===============================================
-// UPDATED/FIXED FUNCTION
+// THIS IS THE CORRECTED FUNCTION
 // ===============================================
 async function cancelTicket(id, eventId, quantity) {
     if (!confirm(`Are you sure you want to cancel ${quantity} ticket(s)? This will refund the amount and release the seats.`)) return;
@@ -210,6 +210,10 @@ async function cancelTicket(id, eventId, quantity) {
         alert(`❌ Failed to cancel ticket: ${error.message}`);
     }
 }
+// ===============================================
+// END OF CORRECTED FUNCTION
+// ===============================================
+
 
 // ==================== PAYMENT GATEWAY LOGIC ====================
 
@@ -429,6 +433,7 @@ function renderTickets() {
                 <p style="font-size: 0.9em; margin-top: 10px;">Booked: ${bookingTimeString}</p>
                 <div class="event-actions" style="margin-top: 10px; padding: 0;">
                     <button class="btn btn-danger btn-small" style="width: 150px; background: #f093fb;" onclick="cancelTicket('${t.id}', '${t.eventId}', ${t.quantity})">Cancel Ticket</button>
+
                 </div>
             </div>
         `;
