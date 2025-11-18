@@ -259,7 +259,7 @@ function closePaymentModal() {
 }
 
 async function processPayment() {
-    alert("💳 Processing payment... (Fake 3 seconds delay)");
+    alert("💳 Processing payment...");
     await new Promise(resolve => setTimeout(resolve, 3000)); 
     
     if (!pendingTicketData) {
